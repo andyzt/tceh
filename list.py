@@ -28,3 +28,47 @@ list1.extend(list2)
 print(list1)
 
 list1.insert(1, 'inserted value')
+print(list1)
+
+var = ['bar']
+new_var = var
+var.append('foo')
+var[0] = 'baz'
+print(new_var)
+# end
+
+# delete
+test_list = ['pop','remove','del']
+
+# by index
+popped = test_list.pop(0)
+print('popped value is "{}"'.format(popped))
+
+# by value
+test_list.remove('remove')
+
+del test_list[0]  # del doesn't return a value
+
+#  unpack
+v, s = ['v','s']
+
+#multi
+multi = [
+    [0, 1, 2, 3],
+    [4, 5, 6, 7],
+    [8, 9, 10, 11]
+]  # matrix 4*3
+
+for row in multi:
+    print(row)
+    for element in row:
+        print('element: ', element)
+
+#  xrange in 2.7 = range in 3
+if sys.version_info[0] == 2:
+    print('xrange: ', xrange(1,10))
+else:
+    print('range: ', range(1,10))
+
+for i in list(range(1, 15, 2)):
+    print(i)
