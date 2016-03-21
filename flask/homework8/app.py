@@ -27,15 +27,15 @@ API_validators = [{'client.name': [validators.Length(min=1),],
                   ]
 
 
-
-
-@app.route('/api/<version>/order', methods=['POST'])
-def home(version):
-    def flatten_dict(dd, separator='.', prefix=''):
+def flatten_dict(dd, separator='.', prefix=''):
         return { prefix + separator + k if prefix else k : v
                  for kk, vv in dd.items()
                  for k, v in flatten_dict(vv, separator, kk).items()
                  } if isinstance(dd, dict) else { prefix : dd }
+
+
+@app.route('/api/<version>/order', methods=['POST'])
+def home(version):
 
     class F(Form):
         pass
