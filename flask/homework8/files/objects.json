@@ -1,0 +1,47 @@
+{
+   "order":{
+      "product_name":"apples",
+      "count":2
+   },
+   "client":{
+      "name":"STR_CLIENT_NAME"
+   },
+   "address":{
+      "full_address":"STR_FULL_ADDRESS"
+   }
+}{
+   "order":{
+      "product_name":"apples",
+      "count":2
+   },
+   "client":{
+      "name":"STR_CLIENT_NAME"
+   },
+   "address":{
+      "full_address":"STR_FULL_ADDRESS"
+   }
+}{
+	"order":{
+		"product_name":"apples",
+		"count":7
+	},
+	"client":{
+		"name":"STR_CLIENT_NAME",
+		"email":"aa@aa.ru",
+		"address":{
+			"full_address":"STR_FULL_ADDRESS"
+		}
+	}
+}{
+	"order":{
+		"product_name":"apples",
+		"count":8
+	},
+	"client":{
+		"name":"STR_CLIENT_NAME",
+		"email":"aa@aa.ru",
+		"address":{
+			"full_address":"STR_FULL_ADDRESS"
+		}
+	}
+}
