@@ -60,10 +60,10 @@ def home():
 def shutdown():
     shutdown_server()
     storage=Storage()
-    _file = open(persons_file, 'w')
-    result_json = PostEncoder().encode(storage.items)
-    _file.write(result_json)
-    _file.close()
+    with open(persons_file, 'w') as _file:
+        result_json = PostEncoder().encode(storage.items)
+        _file.write(result_json)
+
     return 'Server shutting down...'
 
 
