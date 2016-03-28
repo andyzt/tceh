@@ -1,0 +1,35 @@
+{% extends '_base_template.html' %}
+
+{% block content %}
+<div class="menu">
+    <table><tr>
+        <td>
+        <a href="auth/login">Login</a>
+        </td>
+        <td><a href="auth/register">Register</a>
+        </td>
+    </tr></table>
+</div>
+<div class="content">
+
+    <div class="posts">
+        {% for item in posts %}
+            <div class="post">
+                <h3 class="post-title">
+                    {{ item.title }}
+                </h3>
+
+                <h5>{{ item.date_created }}</h5>
+
+                <div class="post-text">
+                    {{ item.content }}
+                </div>
+
+            </div>
+
+        {% endfor %}
+    </div>
+
+</div>
+
+{% endblock %}
