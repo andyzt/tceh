@@ -2,11 +2,9 @@
 
 {% block content %}
 <div class="menu">
-    <table><tr>
-        <td>
-        <a href="/auth/logout">Logout</a>
-        </td>
-    </tr></table>
+
+        <a class="btn btn-primary" href="{{ url_for('auth.logout') }}" role="button">Logout</a>
+
 </div>
 <div class="content">
     {% with messages = get_flashed_messages(with_categories=true) %}
@@ -35,19 +33,20 @@
 
     <div class="posts">
         {% for item in posts %}
-            <div class="post">
-                <h3 class="post-title">
-                    {{ item.title }}
-                </h3>
-
-                <h4>{{ item.user.username }}</h4>
-                <h5>{{ item.date_created }}</h5>
-
-                <div class="post-text">
-                    {{ item.content }}
+             <div class="row">
+             <div class="col-sm-6 col-md-4">
+                <div class="thumbnail">
+                  <img >
+                  <div class="caption">
+                    <h3>{{ item.title }}</h3>
+                      <h4>{{ item.user.username }}</h4>
+                      <h5>{{ item.date_created }}</h5>
+                    <p>{{ item.content }}</p>
+                    <p><a href="{{ url_for('auth.delete', post_id=item.id) }}" class="btn btn-primary" role="button">Delete</a> </p>
+                  </div>
                 </div>
-                    <a href="{{ url_for('auth.delete', post_id=item.id) }}">Delete</a>
-                </div>
+              </div>
+            </div>
 
         {% endfor %}
     </div>
