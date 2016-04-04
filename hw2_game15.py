@@ -5,7 +5,7 @@ import random  # see https://docs.python.org/2/library/random.html
 
 
 
-EMPTY_MARK = 'empty'
+EMPTY_MARK = '0'
 DIMENSION = 4
 
 cur_pos = [0,0]
@@ -72,13 +72,6 @@ def is_game_finished(field):
     return flag
 
 def perform_move(field, key):
-    """
-    Moves empty-tile inside the field.
-    :param field: current field state.
-    :param key: move direction.
-    :return: new field state (after the move).
-    :raises: IndexError if the move can't me done.
-    """
 
     if key == 'w':
         if cur_pos[0] == 0:
@@ -166,7 +159,6 @@ def main():
             break
 
     return None
-
 
 
 if __name__ == '__main__':
