@@ -1,0 +1,64 @@
+{% extends '_base_template.html' %}
+
+{% block content %}
+<div class="menu">
+
+        <a class="btn btn-primary" href="{{ url_for('auth.logout') }}" role="button">Logout</a>
+
+</div>
+<div class="content">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <ul class=flashes>
+                {% for category, message in messages %}
+                    <li class="{{ category }}">{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    {% endwith %}
+
+    {% from "macros/render_field.html" import render_field %}
+    <form method="POST" action="{{ url_for('auth.view') }}">
+        {{ form.hidden_tag() }}
+        <dl>
+            {% for field in form %}
+                {% if field.id != 'csrf_token' and field.id != 'is_visible' and
+            field.id != 'date_created' and field.id != 'content' %}
+                    {{ render_field(field) }}
+            {% endif %}
+            {% if field.id == 'content' %}
+                <dt>{{ field.label }}</dt>
+                <dd>{{ field()|safe }} </dd>
+            {% endif %}
+            {% endfor %}
+
+        </dl>
+
+        <input type="submit" value="{{ 'Submit' }}" class="btn">
+    </form>
+
+    <div class="posts">
+        {% for item in posts %}
+             <div class="row">
+             <div class="col-sm-10 col-md-8">
+                <div class="thumbnail">
+                  <img >
+                  <div class="caption">
+                    <h3>{{ item.title }}</h3>
+                      <h4>{{ item.user.username }}</h4>
+                      <h5>{{ item.date_created }}</h5>
+                    <p>{{ item.content }}</p>
+                    <p><a href="{{ url_for('auth.delete', post_id=item.id) }}" class="btn btn-primary" role="button">Delete</a>
+                    <a href="{{ url_for('auth.add_comment', post_id=item.id) }}" class="btn btn-default" role="button">Delete</a>
+                   </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+        {% endfor %}
+    </div>
+
+</div>
+
+{% endblock %}
