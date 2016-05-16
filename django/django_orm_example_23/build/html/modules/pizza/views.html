@@ -1,0 +1,240 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Pizza Views &mdash; pizza_project 0.1.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="pizza_project 0.1.0 documentation" href="../../index.html" />
+    <link rel="prev" title="Purpose" href="../../articles/purpose.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="pizza-views">
+<h1>Pizza Views<a class="headerlink" href="#pizza-views" title="Permalink to this headline">¶</a></h1>
+<p>Endpoint docs for <cite>pizza.views</cite>:</p>
+<span class="target" id="module-pizza.views"></span><p>Views module</p>
+<dl class="function">
+<dt id="pizza.views.close">
+<code class="descclassname">pizza.views.</code><code class="descname">close</code><span class="sig-paren">(</span><em>request</em>, <em>pizza_order_id</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/pizza/views.html#close"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pizza.views.close" title="Permalink to this definition">¶</a></dt>
+<dd><p>This view closes particular pizza order when pizza is delivered.
+After mark pizza as delivered this view redirects us to pizza:view</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>request</strong> &#8211; HttpRequest, accepted methods: GET</li>
+<li><strong>pizza_order_id</strong> &#8211; Integer, id of particular pizza order.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">view or errors:
+with status code 404 if order with provided id is not found
+with status code 405 if used another method (not GET)</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">HttpResponse with redirect to pizza</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="pizza.views.create">
+<code class="descclassname">pizza.views.</code><code class="descname">create</code><span class="sig-paren">(</span><em>request</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/pizza/views.html#create"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pizza.views.create" title="Permalink to this definition">¶</a></dt>
+<dd><p>This view renders a form for creating new <code class="xref py py-class docutils literal"><span class="pre">PizzaOrder</span></code>
+or accepts POST requests with the form to save its data. Or render errors.</p>
+<p>PizzaOrder: is a base class that contains all order data, see field list below:</p>
+<ul class="simple">
+<li>kind</li>
+<li>size</li>
+<li>delivery</li>
+<li>extra</li>
+<li>exclude</li>
+<li>comment</li>
+<li>delivered</li>
+<li>date_created</li>
+<li>date_delivered</li>
+</ul>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>request</strong> &#8211; HttpRequest, accepted methods: GET, POST</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">HttpResponse with rendered view, or error code if used method other than GET or POST</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="pizza.views.get_stats_report">
+<code class="descclassname">pizza.views.</code><code class="descname">get_stats_report</code><span class="sig-paren">(</span><em>request</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/pizza/views.html#get_stats_report"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pizza.views.get_stats_report" title="Permalink to this definition">¶</a></dt>
+<dd><p>This view shows various statistics about the created orders.
+It should be called after collection task is finished.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>request</strong> &#8211; HttpRequest, accepted methods: GET</li>
+<li><strong>task_id</strong> &#8211; Integer, id of async task that is started by pizza:stats to collect statistics.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">with status code 404 if task with provided id is not found
+with status code 405 if used another method (not GET)</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">HttpResponse with rendered view or errors</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="pizza.views.index">
+<code class="descclassname">pizza.views.</code><code class="descname">index</code><span class="sig-paren">(</span><em>request</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/pizza/views.html#index"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pizza.views.index" title="Permalink to this definition">¶</a></dt>
+<dd><p>This view renders the main page, listing all orders.
+Every link in the list points to the <a class="reference internal" href="#pizza.views.create" title="pizza.views.create"><code class="xref py py-func docutils literal"><span class="pre">create()</span></code></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>request</strong> &#8211; HttpRequest, accepted methods: GET</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">HttpResponse with rendered view or error with status code 405 if used another method (not GET)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="pizza.views.stats">
+<code class="descclassname">pizza.views.</code><code class="descname">stats</code><span class="sig-paren">(</span><em>request</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/pizza/views.html#stats"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pizza.views.stats" title="Permalink to this definition">¶</a></dt>
+<dd><p>This view creates an async task to collect various statistics about
+the created orders. As a result returns an HttpResponse with task&#8217;s id.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>request</strong> &#8211; HttpRequest, allowed methods: GET</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">HttpResponse with task&#8217;s id or error if used method other than GET</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="pizza.views.view">
+<code class="descclassname">pizza.views.</code><code class="descname">view</code><span class="sig-paren">(</span><em>request</em>, <em>pizza_order_id</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/pizza/views.html#view"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pizza.views.view" title="Permalink to this definition">¶</a></dt>
+<dd><p>This view shows us particular pizza order details (usually we can get here by link from orders page)
+Also select from related tables is performed (to show chosen values for this order)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>request</strong> &#8211; HttpRequest, accepted methods: GET</li>
+<li><strong>pizza_order_id</strong> &#8211; Integer, id of particular pizza order.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">with status code 404 if order with provided id is not found
+with status code 405 if used another method (not GET)</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">HttpResponse with rendered view or errors</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="../../articles/purpose.html" title="previous chapter">Purpose</a></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../_sources/modules/pizza/views.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Nikita Sobolev.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.8</a>
+      
+      |
+      <a href="../../_sources/modules/pizza/views.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

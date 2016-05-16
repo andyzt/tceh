@@ -1,0 +1,263 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>pizza.views &mdash; pizza_project 0.1.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="pizza_project 0.1.0 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for pizza.views</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot; Views module</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">django.contrib.auth.decorators</span> <span class="kn">import</span> <span class="n">login_required</span>
+<span class="kn">from</span> <span class="nn">django.core.urlresolvers</span> <span class="kn">import</span> <span class="n">reverse</span>
+<span class="kn">from</span> <span class="nn">django.db</span> <span class="kn">import</span> <span class="n">transaction</span>
+<span class="kn">from</span> <span class="nn">django.http</span> <span class="kn">import</span> <span class="n">HttpResponse</span><span class="p">,</span> <span class="n">Http404</span>
+<span class="kn">from</span> <span class="nn">django.shortcuts</span> <span class="kn">import</span> <span class="n">render_to_response</span><span class="p">,</span> <span class="n">redirect</span><span class="p">,</span> <span class="n">get_object_or_404</span>
+<span class="kn">from</span> <span class="nn">django.template</span> <span class="kn">import</span> <span class="n">RequestContext</span>
+
+<span class="kn">from</span> <span class="nn">pizza.models</span> <span class="kn">import</span> <span class="n">PizzaOrder</span>
+<span class="kn">from</span> <span class="nn">pizza.forms</span> <span class="kn">import</span> <span class="n">PizzaOrderForm</span><span class="p">,</span> <span class="n">DeliveryForm</span>
+<span class="kn">from</span> <span class="nn">pizza.tasks</span> <span class="kn">import</span> <span class="n">create_report</span>
+
+
+<span class="c1"># Create your views here.</span>
+
+
+<div class="viewcode-block" id="index"><a class="viewcode-back" href="../../modules/pizza/views.html#pizza.views.index">[docs]</a><span class="k">def</span> <span class="nf">index</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This view renders the main page, listing all orders.</span>
+<span class="sd">    Every link in the list points to the :func:`create`</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        request: HttpRequest, accepted methods: GET</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        HttpResponse with rendered view or error with status code 405 if used another method (not GET)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;GET&#39;</span><span class="p">:</span>
+        <span class="n">pizzas</span> <span class="o">=</span> <span class="n">PizzaOrder</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">render_to_response</span><span class="p">(</span><span class="s1">&#39;pizza/index.html&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;pizzas&#39;</span><span class="p">:</span> <span class="n">pizzas</span><span class="p">})</span>
+    <span class="k">return</span> <span class="n">HttpResponse</span><span class="p">(</span><span class="n">status</span><span class="o">=</span><span class="mi">405</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="create"><a class="viewcode-back" href="../../modules/pizza/views.html#pizza.views.create">[docs]</a><span class="k">def</span> <span class="nf">create</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This view renders a form for creating new :class:`PizzaOrder`</span>
+<span class="sd">    or accepts POST requests with the form to save its data. Or render errors.</span>
+
+<span class="sd">    PizzaOrder: is a base class that contains all order data, see field list below:</span>
+
+<span class="sd">    - kind</span>
+<span class="sd">    - size</span>
+<span class="sd">    - delivery</span>
+<span class="sd">    - extra</span>
+<span class="sd">    - exclude</span>
+<span class="sd">    - comment</span>
+<span class="sd">    - delivered</span>
+<span class="sd">    - date_created</span>
+<span class="sd">    - date_delivered</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        request: HttpRequest, accepted methods: GET, POST</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        HttpResponse with rendered view, or error code if used method other than GET or POST</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;GET&#39;</span><span class="p">:</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="n">RequestContext</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="p">{</span>
+            <span class="s1">&#39;pizza_form&#39;</span><span class="p">:</span> <span class="n">PizzaOrderForm</span><span class="p">(),</span>
+            <span class="s1">&#39;delivery_form&#39;</span><span class="p">:</span> <span class="n">DeliveryForm</span><span class="p">(),</span>
+        <span class="p">})</span>
+        <span class="k">return</span> <span class="n">render_to_response</span><span class="p">(</span><span class="s1">&#39;pizza/create.html&#39;</span><span class="p">,</span> <span class="n">c</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="n">request</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;POST&#39;</span><span class="p">:</span>
+        <span class="n">pizza_form</span> <span class="o">=</span> <span class="n">PizzaOrderForm</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">POST</span><span class="p">)</span>
+        <span class="n">delivery_from</span> <span class="o">=</span> <span class="n">DeliveryForm</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">POST</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">pizza_form</span><span class="o">.</span><span class="n">is_valid</span><span class="p">()</span> <span class="ow">and</span> <span class="n">delivery_from</span><span class="o">.</span><span class="n">is_valid</span><span class="p">():</span>
+            <span class="n">user</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">user</span>
+            <span class="n">user</span> <span class="o">=</span> <span class="n">user</span> <span class="k">if</span> <span class="n">user</span><span class="o">.</span><span class="n">is_authenticated</span><span class="p">()</span> <span class="k">else</span> <span class="bp">None</span>
+            <span class="k">with</span> <span class="n">transaction</span><span class="o">.</span><span class="n">atomic</span><span class="p">():</span>
+                <span class="n">delivery</span> <span class="o">=</span> <span class="n">delivery_from</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">user</span><span class="o">=</span><span class="n">user</span><span class="p">)</span>
+                <span class="n">pizza</span> <span class="o">=</span> <span class="n">pizza_form</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">delivery</span><span class="o">=</span><span class="n">delivery</span><span class="p">)</span>
+                <span class="n">pizza_form</span><span class="o">.</span><span class="n">save_m2m</span><span class="p">()</span>
+
+            <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span><span class="n">reverse</span><span class="p">(</span><span class="s1">&#39;pizza:view&#39;</span><span class="p">,</span> <span class="n">kwargs</span><span class="o">=</span><span class="p">{</span>
+                <span class="s1">&#39;pizza_order_id&#39;</span><span class="p">:</span> <span class="n">pizza</span><span class="o">.</span><span class="n">pk</span>
+            <span class="p">}))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">c</span> <span class="o">=</span> <span class="n">RequestContext</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="p">{</span>
+                <span class="s1">&#39;pizza_form&#39;</span><span class="p">:</span> <span class="n">pizza_form</span><span class="p">,</span>
+                <span class="s1">&#39;delivery_form&#39;</span><span class="p">:</span> <span class="n">delivery_from</span><span class="p">,</span>
+            <span class="p">})</span>
+            <span class="k">return</span> <span class="n">render_to_response</span><span class="p">(</span><span class="s1">&#39;pizza/create.html&#39;</span><span class="p">,</span> <span class="n">c</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">HttpResponse</span><span class="p">(</span><span class="n">status</span><span class="o">=</span><span class="mi">405</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="view"><a class="viewcode-back" href="../../modules/pizza/views.html#pizza.views.view">[docs]</a><span class="k">def</span> <span class="nf">view</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">pizza_order_id</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This view shows us particular pizza order details (usually we can get here by link from orders page)</span>
+<span class="sd">    Also select from related tables is performed (to show chosen values for this order)</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        request: HttpRequest, accepted methods: GET</span>
+<span class="sd">        pizza_order_id: Integer, id of particular pizza order.</span>
+<span class="sd">    Returns:</span>
+<span class="sd">        HttpResponse with rendered view or errors:</span>
+<span class="sd">        with status code 404 if order with provided id is not found</span>
+<span class="sd">        with status code 405 if used another method (not GET)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;GET&#39;</span><span class="p">:</span>
+        <span class="c1"># pizza = get_object_or_404(PizzaOrder, id=pizza_order_id)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">pizza</span> <span class="o">=</span> <span class="n">PizzaOrder</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">select_related</span><span class="p">(</span>
+                <span class="s1">&#39;size&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;kind&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;delivery&#39;</span><span class="p">,</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">prefetch_related</span><span class="p">(</span>
+                <span class="s1">&#39;extra&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;exclude&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;kind__ingredients&#39;</span><span class="p">,</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+                <span class="nb">id</span><span class="o">=</span><span class="n">pizza_order_id</span>
+            <span class="p">)</span>
+        <span class="k">except</span> <span class="n">PizzaOrder</span><span class="o">.</span><span class="n">DoesNotExist</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">Http404</span><span class="p">(</span><span class="s1">&#39;Selected pizza not found&#39;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">render_to_response</span><span class="p">(</span><span class="s1">&#39;pizza/view.html&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;pizza&#39;</span><span class="p">:</span> <span class="n">pizza</span><span class="p">})</span>
+    <span class="k">return</span> <span class="n">HttpResponse</span><span class="p">(</span><span class="n">status</span><span class="o">=</span><span class="mi">405</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="close"><a class="viewcode-back" href="../../modules/pizza/views.html#pizza.views.close">[docs]</a><span class="k">def</span> <span class="nf">close</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">pizza_order_id</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This view closes particular pizza order when pizza is delivered.</span>
+<span class="sd">    After mark pizza as delivered this view redirects us to pizza:view</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        request: HttpRequest, accepted methods: GET</span>
+<span class="sd">        pizza_order_id: Integer, id of particular pizza order.</span>
+<span class="sd">    Returns:</span>
+<span class="sd">        HttpResponse with redirect to pizza:view or errors:</span>
+<span class="sd">        with status code 404 if order with provided id is not found</span>
+<span class="sd">        with status code 405 if used another method (not GET)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;GET&#39;</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">pizza</span> <span class="o">=</span> <span class="n">get_object_or_404</span><span class="p">(</span><span class="n">PizzaOrder</span><span class="p">,</span> <span class="nb">id</span><span class="o">=</span><span class="n">pizza_order_id</span><span class="p">)</span>
+            <span class="n">pizza</span><span class="o">.</span><span class="n">mark_delivered</span><span class="p">()</span>
+
+            <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span><span class="n">reverse</span><span class="p">(</span><span class="s1">&#39;pizza:view&#39;</span><span class="p">,</span> <span class="n">kwargs</span><span class="o">=</span><span class="p">{</span>
+                <span class="s1">&#39;pizza_order_id&#39;</span><span class="p">:</span> <span class="n">pizza</span><span class="o">.</span><span class="n">pk</span>
+            <span class="p">}))</span>
+        <span class="k">except</span> <span class="n">PizzaOrder</span><span class="o">.</span><span class="n">DoesNotExist</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">HttpResponse</span><span class="p">(</span><span class="s1">&#39;Does not exist&#39;</span><span class="p">,</span> <span class="n">status_code</span><span class="o">=</span><span class="mi">404</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">HttpResponse</span><span class="p">(</span><span class="n">status</span><span class="o">=</span><span class="mi">405</span><span class="p">)</span></div>
+
+
+<span class="nd">@login_required</span>
+<div class="viewcode-block" id="stats"><a class="viewcode-back" href="../../modules/pizza/views.html#pizza.views.stats">[docs]</a><span class="k">def</span> <span class="nf">stats</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This view creates an async task to collect various statistics about</span>
+<span class="sd">    the created orders. As a result returns an HttpResponse with task&#39;s id.</span>
+
+<span class="sd">    :param request: HttpRequest, allowed methods: GET</span>
+<span class="sd">    :returns: HttpResponse with task&#39;s id or error if used method other than GET</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;GET&#39;</span><span class="p">:</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="n">create_report</span><span class="o">.</span><span class="n">delay</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">HttpResponse</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">task_id</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">HttpResponse</span><span class="p">(</span><span class="n">status</span><span class="o">=</span><span class="mi">405</span><span class="p">)</span></div>
+
+
+<span class="nd">@login_required</span><span class="p">()</span>
+<div class="viewcode-block" id="get_stats_report"><a class="viewcode-back" href="../../modules/pizza/views.html#pizza.views.get_stats_report">[docs]</a><span class="k">def</span> <span class="nf">get_stats_report</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">task_id</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This view shows various statistics about the created orders.</span>
+<span class="sd">    It should be called after collection task is finished.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        request: HttpRequest, accepted methods: GET</span>
+<span class="sd">        task_id: Integer, id of async task that is started by pizza:stats to collect statistics.</span>
+<span class="sd">    Returns:</span>
+<span class="sd">        HttpResponse with rendered view or errors:</span>
+<span class="sd">        with status code 404 if task with provided id is not found</span>
+<span class="sd">        with status code 405 if used another method (not GET)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">HttpResponse</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Nikita Sobolev.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.8</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

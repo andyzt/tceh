@@ -1,0 +1,22 @@
+{
+  "name": "django_orm_example",
+  "homepage": "https://github.com/tceh-python/tceh-python",
+  "authors": [
+    "sobolevn <mail@sobolevn.me>"
+  ],
+  "description": "",
+  "main": "",
+  "moduleType": [],
+  "license": "MIT",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "bootstrap": "~3.3.6"
+  }
+}
